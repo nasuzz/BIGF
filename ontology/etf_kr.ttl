@@ -9,13 +9,10 @@ fp:DomesticETF a owl:Class ; rdfs:subClassOf fp:ETF ; rdfs:label "국내 ETF"@ko
 fp:DomesticETF owl:disjointWith fp:ForeignETF .
 
 fp:netAssetsKRW a owl:DatatypeProperty ; rdfs:domain fp:DomesticETF ; rdfs:range xsd:decimal .
-fp:oneYearReturn a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:decimal .
-fp:volatility a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:decimal .
-fp:leverageFactor a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:decimal .
 
 fp:DomesticETFShape a sh:NodeShape ; sh:targetClass fp:DomesticETF ;
     sh:not [ sh:class fp:ForeignETF ] ;
     sh:property [ sh:path fp:productId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
     sh:property [ sh:path fp:currency ; sh:hasValue "KRW" ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path fp:isManagedBy ; sh:maxCount 1 ; sh:class fp:ManagementCompany ] ;
-    sh:property [ sh:path fp:netAssetsKRW ; sh:minInclusive 0 ; sh:datatype xsd:decimal ] .
+    sh:property [ sh:path fp:netAssetsKRW ; sh:maxCount 1 ; sh:minInclusive 0 ; sh:datatype xsd:decimal ] .

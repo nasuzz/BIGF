@@ -39,6 +39,14 @@ fp:ticker a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:string .
 fp:isin a owl:DatatypeProperty ; rdfs:domain fp:FinancialProduct ; rdfs:range xsd:string .
 fp:expenseRatio a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:decimal .
 fp:tracksIndex a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:string .
+# Returns are percentage values: 12.5 means 12.5%, not 0.125.
+# Only map comparable trailing-one-year returns with a known calculation basis.
+fp:returnOneYearPct a owl:DatatypeProperty ;
+    rdfs:domain fp:Fund ; rdfs:range xsd:decimal ;
+    rdfs:comment "DB canonical return_1y_pct; one trailing year, percentage units. Preserve source and valuation date."@en .
+fp:volatility a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:decimal .
+fp:leverageFactor a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:decimal .
+fp:strategyText a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:string .
 fp:isManagedBy a owl:ObjectProperty, owl:FunctionalProperty ;
     rdfs:domain fp:Fund ; rdfs:range fp:ManagementCompany ; owl:inverseOf fp:manages .
 fp:manages a owl:ObjectProperty ; rdfs:domain fp:ManagementCompany ; rdfs:range fp:Fund .
@@ -61,13 +69,28 @@ fp:affiliateOf a owl:ObjectProperty, owl:SymmetricProperty ;
 
 fp:FinancialProductShape a sh:NodeShape ; sh:targetClass fp:FinancialProduct ;
     sh:not [ sh:class fp:Organization ] ;
+    sh:property [ sh:path fp:asOfDate ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path fp:currency ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^[A-Z]{3}$" ] ;
     sh:property [ sh:path fp:isAvailableForSale ; sh:maxCount 1 ; sh:datatype xsd:boolean ] .
 fp:FundShape a sh:NodeShape ; sh:targetClass fp:Fund ;
+    sh:property [ sh:path fp:returnOneYearPct ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path fp:holds ; sh:nodeKind sh:IRI ; sh:class fp:Security ] ;
     sh:property [ sh:path fp:hasExposureTo ; sh:nodeKind sh:IRI ; sh:class fp:Organization ] ;
     sh:property [ sh:path fp:isManagedBy ; sh:maxCount 1 ; sh:class fp:ManagementCompany ] .
 fp:SecurityShape a sh:NodeShape ; sh:targetClass fp:Security ;
     sh:property [ sh:path fp:isIssuedBy ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class fp:Issuer ] .
+
+# Reject old ambiguous names explicitly: this validator does not infer aliases.
+fp:LegacyReturnShape a sh:NodeShape ;
+    sh:targetSubjectsOf fp:oneYearReturn, fp:returnOneYear ;
+    sh:property [ sh:path fp:oneYearReturn ; sh:maxCount 0 ; sh:message "Map to returnOneYearPct after checking units, period and calculation basis." ] ;
+    sh:property [ sh:path fp:returnOneYear ; sh:maxCount 0 ; sh:message "Map to returnOneYearPct after checking units, period and calculation basis." ] .
+fp:ETFShape a sh:NodeShape ; sh:targetClass fp:ETF ;
+    sh:not [ sh:class fp:PublicFund ] ;
+    sh:property [ sh:path fp:expenseRatio ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path fp:volatility ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path fp:leverageFactor ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path fp:strategyText ; sh:maxCount 1 ; sh:datatype xsd:string ] .
 
 # BEGIN GENERATED CONCEPTS: b_agent.ontology.DEFAULT_ONTOLOGY.render_concepts_ttl("fp")
 fp:themeScheme a skos:ConceptScheme .

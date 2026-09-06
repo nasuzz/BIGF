@@ -14,7 +14,14 @@ fp:purchaseYield a owl:DatatypeProperty ; rdfs:domain fp:Bond ; rdfs:range xsd:d
 fp:maturityDate a owl:DatatypeProperty ; rdfs:domain fp:Bond ; rdfs:range xsd:date .
 fp:remainingDays a owl:DatatypeProperty ; rdfs:domain fp:Bond ; rdfs:range xsd:nonNegativeInteger .
 
+# Canonical project long-term ratings from b_agent.postgres_gateway._CREDIT_RATINGS.
+# Raw/unsupported/unrated labels belong in the conversion audit, not creditRating.
 fp:BondShape a sh:NodeShape ; sh:targetClass fp:Bond ;
+    sh:property [ sh:path fp:creditRating ; sh:maxCount 1 ; sh:datatype xsd:string ;
+        sh:in ("AAA" "AA+" "AA" "AA-" "A+" "A" "A-" "BBB+" "BBB" "BBB-" "BB+" "BB" "BB-" "B+" "B" "B-" "CCC" "CC" "C" "D") ] ;
+    sh:property [ sh:path fp:couponRate ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path fp:purchaseYield ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path fp:remainingDays ; sh:maxCount 1 ; sh:datatype xsd:nonNegativeInteger ] ;
     sh:not [ sh:class fp:Fund ] ;
     sh:property [ sh:path fp:productId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
     sh:property [ sh:path fp:maturityDate ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
