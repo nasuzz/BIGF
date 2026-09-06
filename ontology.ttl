@@ -1,0 +1,25 @@
+@prefix ma: <https://miraeasset.example/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+ma:FinancialProduct a owl:Class .
+ma:Fund a owl:Class ; rdfs:subClassOf ma:FinancialProduct .
+ma:Organization a owl:Class .
+ma:Theme a owl:Class .
+ma:Bond a owl:Class ; rdfs:subClassOf ma:FinancialProduct ; skos:notation "bond" .
+ma:PublicFund a owl:Class ; rdfs:subClassOf ma:Fund ; skos:notation "public_fund" .
+ma:DomesticETF a owl:Class ; rdfs:subClassOf ma:Fund ; skos:notation "domestic_etf" .
+ma:ForeignETF a owl:Class ; rdfs:subClassOf ma:Fund ; skos:notation "foreign_etf" .
+ma:subsidiaryOf a owl:ObjectProperty ; rdfs:domain ma:Organization ; rdfs:range ma:Organization .
+ma:affiliateOf a owl:ObjectProperty ; rdfs:domain ma:Organization ; rdfs:range ma:Organization .
+ma:holds a owl:ObjectProperty ; rdfs:domain ma:Fund ; rdfs:range ma:Organization .
+ma:theme_space_aerospace a ma:Theme ; skos:prefLabel "space_aerospace" ; skos:altLabel "우주항공"@ko ; skos:altLabel "항공우주"@ko ; skos:altLabel "우주 산업"@ko ; skos:altLabel "우주"@ko ; skos:altLabel "aerospace"@en ; skos:altLabel "space"@en .
+ma:theme_ai a ma:Theme ; skos:prefLabel "ai" ; skos:altLabel "인공지능"@ko ; skos:altLabel "생성형 ai"@ko ; skos:altLabel "artificial intelligence"@en ; skos:altLabel "ai"@en .
+ma:theme_semiconductor a ma:Theme ; skos:prefLabel "semiconductor" ; skos:altLabel "반도체"@ko ; skos:altLabel "semiconductor"@en ; skos:altLabel "chip"@en .
+ma:theme_robotics a ma:Theme ; skos:prefLabel "robotics" ; skos:altLabel "로봇"@ko ; skos:altLabel "robotics"@en ; skos:altLabel "robot"@en .
+ma:theme_defense a ma:Theme ; skos:prefLabel "defense" ; skos:altLabel "방산"@ko ; skos:altLabel "국방"@ko ; skos:altLabel "defense"@en .
+ma:theme_secondary_battery a ma:Theme ; skos:prefLabel "secondary_battery" ; skos:altLabel "2차전지"@ko ; skos:altLabel "이차전지"@ko ; skos:altLabel "secondary battery"@en ; skos:altLabel "battery"@en .
+ma:theme_nuclear a ma:Theme ; skos:prefLabel "nuclear" ; skos:altLabel "원전"@ko ; skos:altLabel "원자력"@ko ; skos:altLabel "nuclear"@en .
+ma:theme_bio_healthcare a ma:Theme ; skos:prefLabel "bio_healthcare" ; skos:altLabel "바이오"@ko ; skos:altLabel "헬스케어"@ko ; skos:altLabel "biotech"@en ; skos:altLabel "healthcare"@en .
+ma:theme_climate_green a ma:Theme ; skos:prefLabel "climate_green" ; skos:altLabel "친환경"@ko ; skos:altLabel "기후"@ko ; skos:altLabel "탄소"@ko ; skos:altLabel "재생에너지"@ko ; skos:altLabel "clean energy"@en ; skos:altLabel "climate"@en .

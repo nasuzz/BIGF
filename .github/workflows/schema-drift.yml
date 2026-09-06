@@ -1,0 +1,42 @@
+name: Schema drift
+
+on:
+  pull_request:
+    paths:
+      - "init/**"
+      - "fund-db-handoff/schema.sql"
+      - "migrations/**"
+      - "scripts/schema_artifacts.py"
+      - "scripts/apply_migrations.py"
+      - "tests/test_schema_active_versions.py"
+      - "tests/test_schema_source_of_truth.py"
+      - ".github/workflows/schema-drift.yml"
+  push:
+    branches: [main]
+    paths:
+      - "init/**"
+      - "fund-db-handoff/schema.sql"
+      - "migrations/**"
+      - "scripts/schema_artifacts.py"
+      - "scripts/apply_migrations.py"
+      - "tests/test_schema_active_versions.py"
+      - "tests/test_schema_source_of_truth.py"
+      - ".github/workflows/schema-drift.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  schema-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check canonical schema references and migrations
+        run: python scripts/schema_artifacts.py --check
+      - name: Run schema regression tests
+        run: python -m unittest tests.test_schema_active_versions tests.test_schema_source_of_truth

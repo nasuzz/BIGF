@@ -1,0 +1,47 @@
+# OS / Python
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*credentials*
+*secret*
+*.dump
+/db_handoff/
+
+# Raw financial data and generated artifacts
+*.xlsx
+*.xls
+*.parquet
+*.duckdb
+*.sqlite
+*.sqlite3
+*.db
+*.faiss
+/data/
+/artifacts/
+/build/
+/indexes/
+/eda_output/
+/prbd01n001_external_fill_output/
+/prbd01n001_missingness_output/
+
+# Data-team EDA sources are maintained outside the B-agent branch.
+/build_financial_products_eda.py
+/financial_products_eda_updated.ipynb
+/prbd01n001_missingness_analysis.py
+/prbd01n001_missingness_analysis.ipynb
+
+# This notebook currently contains a plaintext external API credential.
+/prbd01n001_maximum_missing_fill.ipynb
+
+# Notebook runtime files
+.ipynb_checkpoints/

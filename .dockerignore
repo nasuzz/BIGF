@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.git
+.gitignore
+*.md
+data/
+missing_value_analysis/
+.pytest_cache/

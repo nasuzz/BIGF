@@ -1,0 +1,33 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    restart: unless-stopped   # 서버 재부팅/컨테이너 종료 시 자동 복구
+    healthcheck:
+      test: ["CMD", "python", "-m", "api.readiness_check", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  db:
+    image: pgvector/pgvector:pg18
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    # ports 항목 없음 — 외부 노출 방지, api 컨테이너와는 내부(docker network)로만 통신
+
+volumes:
+  pgdata:
