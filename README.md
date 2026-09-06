@@ -4,7 +4,7 @@
 ## 평가용 API Endpoint
 
 ```
-GET http://49.50.142.6:8000/answer?question_id={질의 ID}&question={평가 질의}
+http://49.50.142.6:8000/answer
 ```
 
 - 인증 헤더 불필요.
