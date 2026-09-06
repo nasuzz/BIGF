@@ -85,6 +85,12 @@ RELATION_PREDICATES = {
 }
 
 
+# Runtime query labels are not necessarily RDF property names. Keep legacy
+# callers unchanged while exporting company-level holdings with precise semantics.
+RDF_RELATION_NAMES = {name: name for name in RELATION_PREDICATES}
+RDF_RELATION_NAMES["holds"] = "hasConstituentCompany"
+
+
 @dataclass(frozen=True)
 class OntologyRegistry:
     base_iri: str = BASE_IRI
@@ -94,6 +100,16 @@ class OntologyRegistry:
 
     def has_relation(self, value: str) -> bool:
         return value in RELATION_PREDICATES
+
+    def rdf_relation_name(self, runtime_name: str) -> str:
+        """Map a supported runtime relation to its RDF local name.
+
+        Mapping is vocabulary-only, not evidence validation. Only verified
+        company-level holdings may use the runtime holds mapping. Generic
+        company exposure uses hasExposureTo directly; security holdings use
+        RDF holds with identified Security nodes.
+        """
+        return RDF_RELATION_NAMES[runtime_name]
 
     def render_ttl(self) -> str:
         lines = [
@@ -114,7 +130,7 @@ class OntologyRegistry:
             )
         for predicate, (domain, range_name) in RELATION_PREDICATES.items():
             lines.append(
-                f"ma:{predicate} a owl:ObjectProperty ; rdfs:domain ma:{domain} ; rdfs:range ma:{range_name} ."
+                f"ma:{self.rdf_relation_name(predicate)} a owl:ObjectProperty ; rdfs:domain ma:{domain} ; rdfs:range ma:{range_name} ."
             )
         for theme, aliases in THEME_ALIASES.items():
             escaped = [alias.replace('"', '\\"') for alias in aliases]

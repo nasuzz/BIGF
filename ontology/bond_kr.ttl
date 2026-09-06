@@ -1,0 +1,28 @@
+@prefix fp: <https://miraeasset.example/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+fp:bond_kr a owl:Ontology ; owl:imports fp:common ; rdfs:label "국내채권 온톨로지"@ko .
+fp:Bond a owl:Class ; rdfs:subClassOf fp:Security ; rdfs:label "국내채권"@ko .
+fp:Bond owl:disjointWith fp:Fund .
+
+fp:creditRating a owl:DatatypeProperty ; rdfs:domain fp:Bond ; rdfs:range xsd:string .
+fp:couponRate a owl:DatatypeProperty ; rdfs:domain fp:Bond ; rdfs:range xsd:decimal .
+fp:purchaseYield a owl:DatatypeProperty ; rdfs:domain fp:Bond ; rdfs:range xsd:decimal .
+fp:maturityDate a owl:DatatypeProperty ; rdfs:domain fp:Bond ; rdfs:range xsd:date .
+fp:remainingDays a owl:DatatypeProperty ; rdfs:domain fp:Bond ; rdfs:range xsd:nonNegativeInteger .
+
+# Canonical project long-term ratings from b_agent.postgres_gateway._CREDIT_RATINGS.
+# Raw/unsupported/unrated labels belong in the conversion audit, not creditRating.
+fp:BondShape a sh:NodeShape ; sh:targetClass fp:Bond ;
+    sh:property [ sh:path fp:creditRating ; sh:maxCount 1 ; sh:datatype xsd:string ;
+        sh:in ("AAA" "AA+" "AA" "AA-" "A+" "A" "A-" "BBB+" "BBB" "BBB-" "BB+" "BB" "BB-" "B+" "B" "B-" "CCC" "CC" "C" "D") ] ;
+    sh:property [ sh:path fp:couponRate ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path fp:purchaseYield ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path fp:remainingDays ; sh:maxCount 1 ; sh:datatype xsd:nonNegativeInteger ] ;
+    sh:not [ sh:class fp:Fund ] ;
+    sh:property [ sh:path fp:productId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path fp:maturityDate ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path fp:isIssuedBy ; sh:maxCount 1 ; sh:class fp:Issuer ] .

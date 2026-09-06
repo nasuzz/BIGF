@@ -1,0 +1,28 @@
+@prefix fp: <https://miraeasset.example/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+fp:fund_pub a owl:Ontology ; owl:imports fp:common ; rdfs:label "공모펀드 온톨로지"@ko .
+fp:PublicFund a owl:Class ; rdfs:subClassOf fp:Fund ; rdfs:label "비상장 공모펀드 클래스 상품"@ko ;
+    rdfs:comment "Project product_type PUBLIC_FUND_CLASS only; not the general legal concept of a publicly offered fund."@en ;
+    owl:disjointWith fp:ETF .
+fp:HedgePolicy a owl:Class ; rdfs:label "환헤지 정책"@ko .
+
+fp:netAssets a owl:DatatypeProperty ; rdfs:domain fp:PublicFund ; rdfs:range xsd:decimal .
+fp:benchmark a owl:DatatypeProperty ; rdfs:domain fp:PublicFund ; rdfs:range xsd:string .
+fp:returnOneMonth a owl:DatatypeProperty ; rdfs:domain fp:PublicFund ; rdfs:range xsd:decimal .
+fp:returnThreeYears a owl:DatatypeProperty ; rdfs:domain fp:PublicFund ; rdfs:range xsd:decimal .
+fp:returnFiveYears a owl:DatatypeProperty ; rdfs:domain fp:PublicFund ; rdfs:range xsd:decimal .
+fp:hasHedgePolicy a owl:ObjectProperty ; rdfs:domain fp:PublicFund ; rdfs:range fp:HedgePolicy .
+
+fp:PublicFundShape a sh:NodeShape ; sh:targetClass fp:PublicFund ;
+    sh:not [ sh:class fp:ETF ] ;
+    sh:property [ sh:path fp:returnOneMonth ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path fp:returnThreeYears ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path fp:returnFiveYears ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path fp:productId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path fp:netAssets ; sh:maxCount 1 ; sh:minInclusive 0 ; sh:datatype xsd:decimal ] .
+
+# 제공 데이터에 보수 정보가 없으므로 expenseRatio를 공모펀드 필수 속성으로 선언하지 않는다.
