@@ -30,7 +30,39 @@
 
 `rdfs:range`는 SHACL datatype 검사를 대신하지 않는다. OWL FunctionalProperty도 단순 DB 유일성 검사와 동일하지 않으므로 데이터의 값 개수는 SHACL로 별도 검사한다.
 
-## 회사·증권·ETF 경로
+## 현재 실행 코드의 기업 단위 편입 경로
+
+현재 실행 레지스트리의 `holds: Fund → Organization`은 유지한다. RDF 이름은 `DEFAULT_ONTOLOGY.rdf_relation_name("holds")`를 통해 `hasConstituentCompany`로 매핑한다. 루트 `ontology.ttl` 생성기도 이 함수를 사용한다. 검색 요청·SQL·기존 관계 이름은 바꾸지 않는다.
+
+| 의미 | RDF 관계 | 대상 |
+| --- | --- | --- |
+| 편입 근거에서 확인된 기업 | hasConstituentCompany | Organization |
+| 식별된 실제 증권 보유 | holds | Security |
+| 기업 관련 노출만 확인 | hasExposureTo | Organization |
+
+이름 변환 함수는 근거를 검증하거나 기업명을 증권으로 바꾸는 함수가 아니다. 편입 데이터에서 기업 정체성과 편입 사실이 확인된 경우에만 hasConstituentCompany를 사용한다. 단순 관련 기업·테마 노출은 hasExposureTo로 남긴다. 세 관계 사이에 equivalentProperty나 자동 변환 규칙을 두지 않는다. 운영 데이터 전량이 검증됐다는 뜻도 아니다.
+
+```turtle
+@prefix fp: <https://miraeasset.example/ontology/> .
+@prefix ex: <https://example.test/> .
+ex:parent a fp:Organization ; fp:hasSubsidiary ex:child .
+ex:child a fp:Organization .
+ex:etf a fp:DomesticETF ; fp:productId "company-example" ; fp:currency "KRW" ;
+    fp:hasConstituentCompany ex:child .
+```
+
+```sparql
+PREFIX fp: <https://miraeasset.example/ontology/>
+PREFIX ex: <https://example.test/>
+SELECT DISTINCT ?etf WHERE {
+  ex:parent fp:hasSubsidiary ?company .
+  ?etf fp:hasConstituentCompany ?company .
+}
+```
+
+위 예시는 가상 데이터이며 상장 여부나 특정 증권의 보유를 입증하지 않는다. 상장 조건이 있는 질문은 별도 상장 근거와 기준일 확인이 필요하다.
+
+## 증권 식별자가 확보된 경우의 경로
 
 다음은 가상 데이터이며 실제 기업 관계나 편입 사실을 주장하지 않는다.
 
@@ -129,8 +161,8 @@ SELECT DISTINCT ?product WHERE {
 
 ## 통합 전 남은 범위 — 초안 유지 이유
 
-이관된 저장소의 초기 스냅샷 `aad41d6` 기준의 `b_agent/ontology.py`는 여전히 `holds: Fund → Organization`이며 이 스키마는 `Fund → Security`다. **루트 ontology.ttl과 이 5개를 그대로 합치면 안 된다.** 양쪽 range가 함께 적용되어 기업/증권 배타성과 충돌할 수 있다. 실행 검색은 기업 단위 관계를 사용하므로 관계 정의만 바꾸는 수정도 하지 않는다.
+기존 실행용 holds 이름은 유지하지만 RDF 렌더러에서 hasConstituentCompany로 변환하므로 루트 TTL의 Organization range와 제출 TTL의 Security range 충돌을 해소했다. 루트와 5개 스키마를 합친 검증 및 OWL 추론 회귀 테스트로 기업이 증권으로 바뀌거나 증권 보유가 생기지 않는 것을 확인했다. 루트 TTL은 여전히 전체 스키마 합본이 아니며, 기본 검증기는 5개 파일을 명시적으로 사용한다. 이 매핑은 실행 어휘와 RDF 정의를 연결한 것이지 DB→RDF 인스턴스 변환기 전체를 구현한 것은 아니다.
 
 `common.ttl`의 `BEGIN GENERATED CONCEPTS`는 로컬 확장 코드에서 생성된 출처를 나타낸다. 해당 생성 코드와 자동 동기화 검증기는 아직 이 PR에 없다. 현재 main에서 같은 생성 명령을 재현할 수 있다는 뜻은 아니다.
 
-운영 통합 전에는 실행 코드·루트 TTL·개념 생성기를 함께 동기화하고, 실제 종목 식별자 및 발행사 연결 근거를 확보하며, 원천 단위/등급 계약과 스냅샷 적재를 검증해야 한다. 외부 설명 문서 9장, 운영 DB 전량, API 연동은 이번 검증 대상이 아니다. 제안서에는 “5개 온톨로지와 SHACL 검증 규칙·오프라인 회귀 테스트”까지 기술한다.
+운영 통합 전에는 개념 생성기를 추가 동기화하고, 실제 종목 식별자 및 발행사 연결 근거를 확보하며, 원천 단위/등급 계약과 스냅샷 적재를 검증해야 한다. 외부 설명 문서 9장, 운영 DB 전량, API 연동은 이번 검증 대상이 아니다. 제안서에는 “5개 온톨로지와 SHACL 검증 규칙·오프라인 회귀 테스트”까지 기술한다.

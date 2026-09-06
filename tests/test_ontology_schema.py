@@ -192,5 +192,41 @@ class OntologySchemaTests(unittest.TestCase):
                 self.assertFalse(validate_data(data, self.schema)[0])
 
 
+
+    def test_runtime_company_holding_mapping_and_combined_schema(self):
+        from b_agent.ontology import DEFAULT_ONTOLOGY, RELATION_PREDICATES
+        self.assertEqual(RELATION_PREDICATES["holds"], ("Fund", "Organization"))
+        self.assertTrue(DEFAULT_ONTOLOGY.has_relation("holds"))
+        self.assertEqual(DEFAULT_ONTOLOGY.rdf_relation_name("holds"), "hasConstituentCompany")
+        self.assertEqual(DEFAULT_ONTOLOGY.rdf_relation_name("subsidiaryOf"), "subsidiaryOf")
+        with self.assertRaises(KeyError):
+            DEFAULT_ONTOLOGY.rdf_relation_name("unknown_relation")
+        root = Graph().parse(data=DEFAULT_ONTOLOGY.render_ttl(), format="turtle")
+        combined = self.schema + root
+        self.assertEqual(set(combined.objects(FP.holds, RDFS.range)), {FP.Security})
+        self.assertEqual(set(combined.objects(FP.hasConstituentCompany, RDFS.range)), {FP.Organization})
+        self.assertNotIn((FP.hasConstituentCompany, OWL.equivalentProperty, FP.holds), combined)
+        data = self.check('''ex:p a fp:DomesticETF ; fp:productId "P" ; fp:currency "KRW" ;
+            fp:hasConstituentCompany ex:child .
+            ex:parent a fp:Organization ; fp:hasSubsidiary ex:child .
+            ex:child a fp:Organization .''')
+        rows = list(data.query('''PREFIX fp: <https://miraeasset.example/ontology/>
+            PREFIX ex: <https://example.test/> SELECT ?etf WHERE {
+              ex:parent fp:hasSubsidiary ?company . ?etf fp:hasConstituentCompany ?company .
+            }'''))
+        self.assertEqual([str(row[0]) for row in rows], ['https://example.test/p'])
+        self.assertTrue(validate_data(data, combined)[0])
+        inferred = combined + data
+        DeductiveClosure(OWLRL_Semantics).expand(inferred)
+        ex = Namespace('https://example.test/')
+        self.assertNotIn((ex.child, RDF.type, FP.Security), inferred)
+        self.assertNotIn((ex.p, FP.holds, ex.child), inferred)
+        self.check('ex:f a fp:PublicFund ; fp:productId "F" ; fp:hasConstituentCompany ex:s . ex:s a fp:Security .', False)
+        # Generic exposure alone must not be promoted to confirmed constituents.
+        exposure = combined + self.check('ex:f a fp:PublicFund ; fp:productId "F" ; fp:hasExposureTo ex:c . ex:c a fp:Organization .')
+        DeductiveClosure(OWLRL_Semantics).expand(exposure)
+        self.assertNotIn((ex.f, FP.hasConstituentCompany, ex.c), exposure)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -50,6 +50,10 @@ fp:strategyText a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:str
 fp:isManagedBy a owl:ObjectProperty, owl:FunctionalProperty ;
     rdfs:domain fp:Fund ; rdfs:range fp:ManagementCompany ; owl:inverseOf fp:manages .
 fp:manages a owl:ObjectProperty ; rdfs:domain fp:ManagementCompany ; rdfs:range fp:Fund .
+# Company-level constituents backed by holdings evidence; not generic exposure.
+fp:hasConstituentCompany a owl:ObjectProperty ;
+    rdfs:domain fp:Fund ; rdfs:range fp:Organization ;
+    rdfs:comment "Company identified in holdings evidence. Does not identify a particular security; runtime holds maps here."@en .
 fp:holds a owl:ObjectProperty ; rdfs:domain fp:Fund ; rdfs:range fp:Security .
 fp:isIssuedBy a owl:ObjectProperty, owl:FunctionalProperty ;
     rdfs:domain fp:Security ; rdfs:range fp:Issuer ; owl:inverseOf fp:issues .
@@ -76,6 +80,7 @@ fp:FinancialProductShape a sh:NodeShape ; sh:targetClass fp:FinancialProduct ;
     sh:property [ sh:path fp:isAvailableForSale ; sh:maxCount 1 ; sh:datatype xsd:boolean ] .
 fp:FundShape a sh:NodeShape ; sh:targetClass fp:Fund ;
     sh:property [ sh:path fp:returnOneYearPct ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path fp:hasConstituentCompany ; sh:nodeKind sh:IRI ; sh:class fp:Organization ] ;
     sh:property [ sh:path fp:holds ; sh:nodeKind sh:IRI ; sh:class fp:Security ] ;
     sh:property [ sh:path fp:hasExposureTo ; sh:nodeKind sh:IRI ; sh:class fp:Organization ] ;
     sh:property [ sh:path fp:isManagedBy ; sh:maxCount 1 ; sh:class fp:ManagementCompany ] .

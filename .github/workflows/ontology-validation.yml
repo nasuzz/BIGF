@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "ontology/**"
+      - "ontology.ttl"
+      - "b_agent/ontology.py"
       - "scripts/validate_ontology.py"
       - "tests/test_ontology_schema.py"
       - "tests/fixtures/ontology/**"
@@ -14,6 +16,8 @@ on:
     branches: [main]
     paths:
       - "ontology/**"
+      - "ontology.ttl"
+      - "b_agent/ontology.py"
       - "scripts/validate_ontology.py"
       - "tests/test_ontology_schema.py"
       - "tests/fixtures/ontology/**"
