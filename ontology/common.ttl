@@ -1,0 +1,186 @@
+@prefix fp: <https://miraeasset.example/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+fp:common a owl:Ontology ;
+    rdfs:label "금융상품 공통 온톨로지"@ko .
+
+fp:Product a owl:Class ; rdfs:label "상품"@ko .
+fp:FinancialProduct a owl:Class ; rdfs:subClassOf fp:Product ; rdfs:label "금융상품"@ko .
+fp:Fund a owl:Class ; rdfs:subClassOf fp:FinancialProduct ; rdfs:label "펀드"@ko .
+fp:ETF a owl:Class ; rdfs:subClassOf fp:Fund ; rdfs:label "상장지수펀드"@ko .
+fp:Security a owl:Class ; rdfs:subClassOf fp:FinancialProduct ; rdfs:label "증권 종목"@ko .
+fp:Constituent a owl:Class ; rdfs:subClassOf fp:Security ; rdfs:label "편입 종목"@ko .
+fp:Organization a owl:Class ; rdfs:label "기관 또는 기업"@ko .
+fp:FinancialProduct owl:disjointWith fp:Organization .
+fp:ManagementCompany a owl:Class ; rdfs:subClassOf fp:Organization ; rdfs:label "운용사"@ko .
+fp:Issuer a owl:Class ; rdfs:subClassOf fp:Organization ; rdfs:label "발행사"@ko .
+fp:Theme a owl:Class ; rdfs:subClassOf skos:Concept ; rdfs:label "투자 테마"@ko .
+fp:Region a owl:Class ; rdfs:subClassOf skos:Concept ; rdfs:label "투자 지역"@ko .
+fp:Document a owl:Class ; rdfs:label "근거 문서"@ko .
+fp:Event a owl:Class ; rdfs:label "상품 관련 이벤트"@ko .
+
+fp:productId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain fp:FinancialProduct ; rdfs:range xsd:string ; rdfs:label "상품 식별자"@ko .
+fp:productName a owl:DatatypeProperty ;
+    rdfs:domain fp:FinancialProduct ; rdfs:range xsd:string ; rdfs:label "상품명"@ko .
+fp:currency a owl:DatatypeProperty ;
+    rdfs:domain fp:FinancialProduct ; rdfs:range xsd:string ; rdfs:label "표시 통화"@ko .
+fp:asOfDate a owl:DatatypeProperty ;
+    rdfs:range xsd:date ; rdfs:label "데이터 기준일"@ko .
+# Missing availability means unknown, not false. Shared domain avoids Bond AND PublicFund inference.
+fp:isAvailableForSale a owl:DatatypeProperty ;
+    rdfs:domain fp:FinancialProduct ; rdfs:range xsd:boolean .
+fp:ticker a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:string .
+fp:isin a owl:DatatypeProperty ; rdfs:domain fp:FinancialProduct ; rdfs:range xsd:string .
+fp:expenseRatio a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:decimal .
+fp:tracksIndex a owl:DatatypeProperty ; rdfs:domain fp:ETF ; rdfs:range xsd:string .
+fp:isManagedBy a owl:ObjectProperty, owl:FunctionalProperty ;
+    rdfs:domain fp:Fund ; rdfs:range fp:ManagementCompany ; owl:inverseOf fp:manages .
+fp:manages a owl:ObjectProperty ; rdfs:domain fp:ManagementCompany ; rdfs:range fp:Fund .
+fp:holds a owl:ObjectProperty ; rdfs:domain fp:Fund ; rdfs:range fp:Security .
+fp:isIssuedBy a owl:ObjectProperty, owl:FunctionalProperty ;
+    rdfs:domain fp:Security ; rdfs:range fp:Issuer ; owl:inverseOf fp:issues .
+fp:issues a owl:ObjectProperty ; rdfs:domain fp:Issuer ; rdfs:range fp:Security .
+# Company-only exposure is not a security holding and is never inferred automatically.
+fp:hasExposureTo a owl:ObjectProperty ; rdfs:domain fp:Fund ; rdfs:range fp:Organization .
+fp:investsInTheme a owl:ObjectProperty ; rdfs:domain fp:FinancialProduct ; rdfs:range fp:Theme .
+fp:hasInvestmentRegion a owl:ObjectProperty ; rdfs:domain fp:FinancialProduct ; rdfs:range fp:Region .
+fp:describedBy a owl:ObjectProperty ; rdfs:domain fp:FinancialProduct ; rdfs:range fp:Document .
+fp:concernsProduct a owl:ObjectProperty ; rdfs:domain fp:Event ; rdfs:range fp:FinancialProduct .
+# Direct parent only. Multi-hop group membership requires a separately validated path.
+fp:subsidiaryOf a owl:ObjectProperty ;
+    rdfs:domain fp:Organization ; rdfs:range fp:Organization ; owl:inverseOf fp:hasSubsidiary .
+fp:hasSubsidiary a owl:ObjectProperty ; rdfs:domain fp:Organization ; rdfs:range fp:Organization .
+fp:affiliateOf a owl:ObjectProperty, owl:SymmetricProperty ;
+    rdfs:domain fp:Organization ; rdfs:range fp:Organization .
+
+fp:FinancialProductShape a sh:NodeShape ; sh:targetClass fp:FinancialProduct ;
+    sh:not [ sh:class fp:Organization ] ;
+    sh:property [ sh:path fp:isAvailableForSale ; sh:maxCount 1 ; sh:datatype xsd:boolean ] .
+fp:FundShape a sh:NodeShape ; sh:targetClass fp:Fund ;
+    sh:property [ sh:path fp:holds ; sh:nodeKind sh:IRI ; sh:class fp:Security ] ;
+    sh:property [ sh:path fp:hasExposureTo ; sh:nodeKind sh:IRI ; sh:class fp:Organization ] ;
+    sh:property [ sh:path fp:isManagedBy ; sh:maxCount 1 ; sh:class fp:ManagementCompany ] .
+fp:SecurityShape a sh:NodeShape ; sh:targetClass fp:Security ;
+    sh:property [ sh:path fp:isIssuedBy ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class fp:Issuer ] .
+
+# BEGIN GENERATED CONCEPTS: b_agent.ontology.DEFAULT_ONTOLOGY.render_concepts_ttl("fp")
+fp:themeScheme a skos:ConceptScheme .
+fp:regionScheme a skos:ConceptScheme .
+fp:theme_space_aerospace a skos:Concept, fp:Theme ;
+    skos:inScheme fp:themeScheme ;
+    skos:notation "space_aerospace" ;
+    skos:prefLabel "space_aerospace"@en ;
+    skos:altLabel "우주항공"@ko ;
+    skos:altLabel "항공우주"@ko ;
+    skos:altLabel "우주 산업"@ko ;
+    skos:altLabel "우주"@ko ;
+    skos:altLabel "aerospace"@en ;
+    skos:altLabel "space"@en .
+fp:theme_ai a skos:Concept, fp:Theme ;
+    skos:inScheme fp:themeScheme ;
+    skos:notation "ai" ;
+    skos:prefLabel "ai"@en ;
+    skos:altLabel "인공지능"@ko ;
+    skos:altLabel "생성형 ai"@ko ;
+    skos:altLabel "artificial intelligence"@en .
+fp:theme_semiconductor a skos:Concept, fp:Theme ;
+    skos:inScheme fp:themeScheme ;
+    skos:notation "semiconductor" ;
+    skos:prefLabel "semiconductor"@en ;
+    skos:altLabel "반도체"@ko ;
+    skos:altLabel "chip"@en .
+fp:theme_robotics a skos:Concept, fp:Theme ;
+    skos:inScheme fp:themeScheme ;
+    skos:notation "robotics" ;
+    skos:prefLabel "robotics"@en ;
+    skos:altLabel "로봇"@ko ;
+    skos:altLabel "robot"@en .
+fp:theme_defense a skos:Concept, fp:Theme ;
+    skos:inScheme fp:themeScheme ;
+    skos:notation "defense" ;
+    skos:prefLabel "defense"@en ;
+    skos:altLabel "방산"@ko ;
+    skos:altLabel "국방"@ko .
+fp:theme_secondary_battery a skos:Concept, fp:Theme ;
+    skos:inScheme fp:themeScheme ;
+    skos:notation "secondary_battery" ;
+    skos:prefLabel "secondary_battery"@en ;
+    skos:altLabel "2차전지"@ko ;
+    skos:altLabel "이차전지"@ko ;
+    skos:altLabel "secondary battery"@en ;
+    skos:altLabel "battery"@en .
+fp:theme_nuclear a skos:Concept, fp:Theme ;
+    skos:inScheme fp:themeScheme ;
+    skos:notation "nuclear" ;
+    skos:prefLabel "nuclear"@en ;
+    skos:altLabel "원전"@ko ;
+    skos:altLabel "원자력"@ko .
+fp:theme_bio_healthcare a skos:Concept, fp:Theme ;
+    skos:inScheme fp:themeScheme ;
+    skos:notation "bio_healthcare" ;
+    skos:prefLabel "bio_healthcare"@en ;
+    skos:altLabel "바이오"@ko ;
+    skos:altLabel "헬스케어"@ko ;
+    skos:altLabel "biotech"@en ;
+    skos:altLabel "healthcare"@en .
+fp:theme_climate_green a skos:Concept, fp:Theme ;
+    skos:inScheme fp:themeScheme ;
+    skos:notation "climate_green" ;
+    skos:prefLabel "climate_green"@en ;
+    skos:altLabel "친환경"@ko ;
+    skos:altLabel "기후"@ko ;
+    skos:altLabel "탄소"@ko ;
+    skos:altLabel "재생에너지"@ko ;
+    skos:altLabel "clean energy"@en ;
+    skos:altLabel "climate"@en .
+fp:region_KR a skos:Concept, fp:Region ;
+    skos:inScheme fp:regionScheme ;
+    skos:notation "한국" ;
+    skos:prefLabel "한국"@ko ;
+    skos:altLabel "국내"@ko ;
+    skos:altLabel "대한민국"@ko ;
+    skos:altLabel "korea"@en ;
+    skos:altLabel "south korea"@en .
+fp:region_CN a skos:Concept, fp:Region ;
+    skos:inScheme fp:regionScheme ;
+    skos:notation "중국" ;
+    skos:prefLabel "중국"@ko ;
+    skos:altLabel "china"@en ;
+    skos:altLabel "chinese"@en .
+fp:region_US a skos:Concept, fp:Region ;
+    skos:inScheme fp:regionScheme ;
+    skos:notation "미국" ;
+    skos:prefLabel "미국"@ko ;
+    skos:altLabel "미합중국"@ko ;
+    skos:altLabel "usa"@en ;
+    skos:altLabel "u.s."@en ;
+    skos:altLabel "u.s.a."@en ;
+    skos:altLabel "united states"@en ;
+    skos:altLabel "united states of america"@en .
+fp:region_JP a skos:Concept, fp:Region ;
+    skos:inScheme fp:regionScheme ;
+    skos:notation "일본" ;
+    skos:prefLabel "일본"@ko ;
+    skos:altLabel "japan"@en .
+fp:region_EU a skos:Concept, fp:Region ;
+    skos:inScheme fp:regionScheme ;
+    skos:notation "유럽" ;
+    skos:prefLabel "유럽"@ko ;
+    skos:altLabel "유로존"@ko ;
+    skos:altLabel "europe"@en ;
+    skos:altLabel "european"@en .
+fp:region_GLOBAL a skos:Concept, fp:Region ;
+    skos:inScheme fp:regionScheme ;
+    skos:notation "글로벌" ;
+    skos:prefLabel "글로벌"@ko ;
+    skos:altLabel "전세계"@ko ;
+    skos:altLabel "전 세계"@ko ;
+    skos:altLabel "global"@en ;
+    skos:altLabel "world"@en ;
+    skos:altLabel "worldwide"@en .
