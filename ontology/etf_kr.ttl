@@ -1,0 +1,18 @@
+@prefix fp: <https://miraeasset.example/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+fp:etf_kr a owl:Ontology ; owl:imports fp:common ; rdfs:label "국내 ETF 온톨로지"@ko .
+fp:DomesticETF a owl:Class ; rdfs:subClassOf fp:ETF ; rdfs:label "국내 ETF"@ko .
+fp:DomesticETF owl:disjointWith fp:ForeignETF .
+
+fp:netAssetsKRW a owl:DatatypeProperty ; rdfs:domain fp:DomesticETF ; rdfs:range xsd:decimal .
+
+fp:DomesticETFShape a sh:NodeShape ; sh:targetClass fp:DomesticETF ;
+    sh:not [ sh:class fp:ForeignETF ] ;
+    sh:property [ sh:path fp:productId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path fp:currency ; sh:hasValue "KRW" ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path fp:isManagedBy ; sh:maxCount 1 ; sh:class fp:ManagementCompany ] ;
+    sh:property [ sh:path fp:netAssetsKRW ; sh:maxCount 1 ; sh:minInclusive 0 ; sh:datatype xsd:decimal ] .

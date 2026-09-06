@@ -1,0 +1,24 @@
+@prefix fp: <https://miraeasset.example/ontology/> .
+@prefix ex: <https://example.test/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+# Synthetic examples only, not real holdings or company relationships.
+# Explicit types are required with inference disabled, including known concepts.
+fp:asset_equity a fp:AssetType .
+fp:theme_space_aerospace a fp:Theme .
+ex:doc a fp:Document ; fp:sourceIdentifier "synthetic-guide-fixture" ;
+    fp:sourceLocation "row 1" ; fp:documentDate "2026-07-11"^^xsd:date ;
+    fp:riskFactorText "가상 예시: 주식가격 변동 위험" .
+ex:parent a fp:Organization ; fp:hasSubsidiary ex:issuer .
+ex:issuer a fp:Issuer .
+ex:stock a fp:Constituent ; fp:isIssuedBy ex:issuer .
+ex:usMarket a fp:ListingMarket ; fp:marketCountryCode "US" .
+ex:krMarket a fp:ListingMarket ; fp:marketCountryCode "KR" .
+ex:etf a fp:ForeignETF ; fp:productId "TEST-US" ; fp:ticker "TEST" ; fp:currency "USD" ;
+    fp:hasAssetType fp:asset_equity ; fp:isListedOn ex:usMarket ;
+    fp:hasInvestmentRegion fp:region_CN ; fp:holds ex:stock ; fp:describedBy ex:doc .
+ex:listing a fp:ListingObservation ; fp:listedProduct ex:stock ; fp:listingMarket ex:krMarket ;
+    fp:asOfDate "2026-07-11"^^xsd:date ; fp:supportedBy ex:doc .
+ex:recent a fp:ThemeAssociation ; fp:concernsProduct ex:etf ;
+    fp:associationTheme fp:theme_space_aerospace ; fp:linkedOn "2026-06-01"^^xsd:date ; fp:supportedBy ex:doc .
+ex:old a fp:ThemeAssociation ; fp:concernsProduct ex:etf ;
+    fp:associationTheme fp:theme_space_aerospace ; fp:linkedOn "2025-01-01"^^xsd:date ; fp:supportedBy ex:doc .

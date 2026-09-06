@@ -13,7 +13,7 @@ ma:DomesticETF a owl:Class ; rdfs:subClassOf ma:Fund ; skos:notation "domestic_e
 ma:ForeignETF a owl:Class ; rdfs:subClassOf ma:Fund ; skos:notation "foreign_etf" .
 ma:subsidiaryOf a owl:ObjectProperty ; rdfs:domain ma:Organization ; rdfs:range ma:Organization .
 ma:affiliateOf a owl:ObjectProperty ; rdfs:domain ma:Organization ; rdfs:range ma:Organization .
-ma:holds a owl:ObjectProperty ; rdfs:domain ma:Fund ; rdfs:range ma:Organization .
+ma:hasConstituentCompany a owl:ObjectProperty ; rdfs:domain ma:Fund ; rdfs:range ma:Organization .
 ma:theme_space_aerospace a ma:Theme ; skos:prefLabel "space_aerospace" ; skos:altLabel "우주항공"@ko ; skos:altLabel "항공우주"@ko ; skos:altLabel "우주 산업"@ko ; skos:altLabel "우주"@ko ; skos:altLabel "aerospace"@en ; skos:altLabel "space"@en .
 ma:theme_ai a ma:Theme ; skos:prefLabel "ai" ; skos:altLabel "인공지능"@ko ; skos:altLabel "생성형 ai"@ko ; skos:altLabel "artificial intelligence"@en ; skos:altLabel "ai"@en .
 ma:theme_semiconductor a ma:Theme ; skos:prefLabel "semiconductor" ; skos:altLabel "반도체"@ko ; skos:altLabel "semiconductor"@en ; skos:altLabel "chip"@en .

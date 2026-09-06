@@ -1,0 +1,22 @@
+@prefix fp: <https://miraeasset.example/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+fp:etf_gl a owl:Ontology ; owl:imports fp:common ; rdfs:label "해외 ETF 온톨로지"@ko .
+fp:ForeignETF a owl:Class ; rdfs:subClassOf fp:ETF ; rdfs:label "해외 ETF"@ko .
+
+fp:nativeAUM a owl:DatatypeProperty ; rdfs:domain fp:ForeignETF ; rdfs:range xsd:decimal .
+fp:closingPrice a owl:DatatypeProperty ; rdfs:domain fp:ForeignETF ; rdfs:range xsd:decimal .
+fp:tradingVolume a owl:DatatypeProperty ; rdfs:domain fp:ForeignETF ; rdfs:range xsd:nonNegativeInteger .
+
+fp:ForeignETFShape a sh:NodeShape ; sh:targetClass fp:ForeignETF ;
+    sh:property [ sh:path fp:closingPrice ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path fp:tradingVolume ; sh:maxCount 1 ; sh:datatype xsd:nonNegativeInteger ] ;
+    sh:property [ sh:path fp:productId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path fp:ticker ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path fp:currency ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^[A-Z]{3}$" ] ;
+    sh:property [ sh:path fp:nativeAUM ; sh:maxCount 1 ; sh:minInclusive 0 ; sh:datatype xsd:decimal ] .
+
+# nativeAUM은 currency의 원 통화 기준이며, 환율·기준일 없이 KRW AUM과 비교하지 않는다.
