@@ -11,7 +11,6 @@ fp:PublicFund a owl:Class ; rdfs:subClassOf fp:Fund ; rdfs:label "비상장 공�
 fp:HedgePolicy a owl:Class ; rdfs:label "환헤지 정책"@ko .
 
 fp:netAssets a owl:DatatypeProperty ; rdfs:domain fp:PublicFund ; rdfs:range xsd:decimal .
-fp:riskGrade a owl:DatatypeProperty ; rdfs:domain fp:PublicFund ; rdfs:range xsd:integer .
 fp:benchmark a owl:DatatypeProperty ; rdfs:domain fp:PublicFund ; rdfs:range xsd:string .
 fp:returnOneMonth a owl:DatatypeProperty ; rdfs:domain fp:PublicFund ; rdfs:range xsd:decimal .
 fp:returnThreeYears a owl:DatatypeProperty ; rdfs:domain fp:PublicFund ; rdfs:range xsd:decimal .
@@ -24,7 +23,6 @@ fp:PublicFundShape a sh:NodeShape ; sh:targetClass fp:PublicFund ;
     sh:property [ sh:path fp:returnThreeYears ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path fp:returnFiveYears ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path fp:productId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
-    sh:property [ sh:path fp:riskGrade ; sh:maxCount 1 ; sh:minInclusive 1 ; sh:maxInclusive 6 ; sh:datatype xsd:integer ] ;
     sh:property [ sh:path fp:netAssets ; sh:maxCount 1 ; sh:minInclusive 0 ; sh:datatype xsd:decimal ] .
 
 # 제공 데이터에 보수 정보가 없으므로 expenseRatio를 공모펀드 필수 속성으로 선언하지 않는다.

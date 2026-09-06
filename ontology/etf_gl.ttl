@@ -6,12 +6,10 @@
 
 fp:etf_gl a owl:Ontology ; owl:imports fp:common ; rdfs:label "해외 ETF 온톨로지"@ko .
 fp:ForeignETF a owl:Class ; rdfs:subClassOf fp:ETF ; rdfs:label "해외 ETF"@ko .
-fp:ListingMarket a owl:Class ; rdfs:label "상장 시장"@ko .
 
 fp:nativeAUM a owl:DatatypeProperty ; rdfs:domain fp:ForeignETF ; rdfs:range xsd:decimal .
 fp:closingPrice a owl:DatatypeProperty ; rdfs:domain fp:ForeignETF ; rdfs:range xsd:decimal .
 fp:tradingVolume a owl:DatatypeProperty ; rdfs:domain fp:ForeignETF ; rdfs:range xsd:nonNegativeInteger .
-fp:isListedOn a owl:ObjectProperty ; rdfs:domain fp:ForeignETF ; rdfs:range fp:ListingMarket .
 
 fp:ForeignETFShape a sh:NodeShape ; sh:targetClass fp:ForeignETF ;
     sh:property [ sh:path fp:closingPrice ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ] ;

@@ -4,7 +4,7 @@
 
 ## 파일과 로딩
 
-- `common.ttl`: 상품·기업·증권 계층과 관계, 공통 Fund/ETF 속성·SHACL, 테마·지역 개념.
+- `common.ttl`: 상품·기업·증권 계층과 관계, 공통 위험등급·자산군·Fund/ETF 속성·SHACL, 테마 이력·근거 문서·상장 정보.
 - `bond_kr.ttl`: 프로젝트의 국내채권 정규화 등급·수치 속성 및 검증.
 - `etf_kr.ttl`: 국내 ETF 원화 순자산 및 검증.
 - `etf_gl.ttl`: 해외 ETF 원통화 자산·가격·거래량 및 검증.
@@ -87,6 +87,45 @@ python scripts/validate_ontology.py --data /absolute/path/products.ttl
 검증기는 5개 파일만 명시적으로 로드하고 `shacl_graph`와 `ont_graph`를 지정한다. `inference="none"`, `do_owl_imports=False`, `meta_shacl=True`로 검사한다. 성공은 종료 코드 0, 데이터/스키마 오류는 1, 검증 의존성 누락은 2다. 입력 파일이 없으면 스키마 검증만 수행한 것으로 표시한다. 일반 unittest 탐색에서는 의존성 누락 시 이 테스트를 건너뛴다. 따라서 TTL 검증에는 위 CLI와 테스트를 함께 실행해야 한다. 전용 GitHub Actions는 선택 의존성을 설치하고 CLI가 성공한 뒤 테스트를 실행한다.
 
 테스트에는 리뷰의 잘못된 채권 값을 각각 독립적으로 거부하는 사례, 복수 위험등급·AUM, 모든 단일 수치 속성의 문자열/중복, 원래의 회사/증권·통화 제약, 정상 경로 SPARQL, 공통 수익률로 인한 잘못된 클래스 추론 방지가 포함된다. 추론 테스트는 별도 그래프에만 OWL RL을 적용하며 기본 SHACL 검증 설정을 바꾸지 않는다.
+
+## 과제 안내문 대조 후 보완
+
+과제설명서의 데이터 범위(5쪽)와 예시 질의(12쪽), 기술세션의 의미 기반 검색 구조를 기준으로 다음을 보완했다. 예시 슬라이드의 위험등급 1~5를 데이터 규칙으로 복사하지 않고 프로젝트의 1~6 체계를 유지한다.
+
+- **공통 위험등급:** riskGrade의 domain과 SHACL을 FinancialProduct로 옮겼다. 채권·국내 ETF·공모펀드 등 원천 등급이 있는 상품에 사용할 수 있다. 해외 상품에 확인되지 않은 등급을 생성하지 않는다. 채권 신용등급 creditRating과는 별개다.
+- **투자자산군:** AssetType/hasAssetType 및 주식형·채권형·단기금융·혼합형 개념을 추가했다. 목록은 폐쇄형 허용 목록이 아니며 원천의 다른 자산군도 AssetType으로 명시해 확장할 수 있다. MMF 등 원본 상품 분류와 자산군의 대응은 실제 데이터 사전 확인 후 매핑한다. 혼합 자산을 고려해 복수 자산군을 허용한다.
+- **테마 연결 이력:** ThemeAssociation 레코드 하나가 상품(concernsProduct), 테마(associationTheme), 근거로 확인된 연결 날짜(linkedOn), 근거 문서(supportedBy)를 묶는다. linkedOn은 추출 작업일이나 문서 발행일로 임의 대체하지 않는다. 최초 편입일이나 종료일까지 입증하는 필드도 아니다. 날짜를 확인할 수 없으면 날짜 없는 investsInTheme 관계만 사용할 수 있지만 기간 질의의 근거로 삼지 않는다.
+- **근거 문서:** sourceIdentifier는 필수이며 원문 식별자를 보존한다. sourceLocation은 페이지·행·URL 등 위치, documentDate는 문서 기준일, riskFactorText는 문서의 위험요인 내용을 담는다. 위험등급 숫자와 위험요인 서술을 구분한다. describedBy 또는 supportedBy로 명시적 Document에 연결한다. 원문 확인·권한·출처 우선순위는 적재/검색 계층에서 별도 적용해야 한다.
+- **상장 국가:** ListingMarket의 marketCountryCode는 ISO 3166-1 alpha-2 형식의 두 자리 대문자로 기록한다. SHACL 정규식은 형식만 검사하며 실제 국가 코드 유효성은 매핑 단계에서 확인한다. hasInvestmentRegion과 다른 개념이다. isListedOn은 공통 상품 속성으로 옮겨 국내 ETF와 증권에도 쓸 수 있게 했다.
+- **상장 자회사:** ListingObservation이 증권/ETF(listedProduct), 시장(listingMarket), 확인 기준일(asOfDate), 근거(supportedBy)를 묶는다. 회사 자체를 listedProduct로 넣지 않는다. 발행사로 연결된 증권의 해당 시점 상장 관측을 확인한다. 과거 관측이 현재 상장을 보장하지 않으며, 날짜 없는 isListedOn만으로 과거 시점의 상장 여부를 추정하지 않는다.
+
+ThemeAssociation과 ListingObservation의 각 레코드는 독립적인 날짜를 가진다. 상품 자체의 asOfDate/maxCount 1과 충돌하지 않고 이력 레코드를 여러 개 보존할 수 있다. 이 구조가 직접 자회사/보유 관계의 유효기간까지 모두 모델링하는 것은 아니다. 해당 관계의 시점 일치도 검색 시 별도 확인해야 한다.
+
+추론을 끈 검증에서는 데이터가 참조하는 자산군·테마 개념도 `a fp:AssetType` / `a fp:Theme` 타입을 입력 그래프에 명시한다. 스키마에 선언된 개념이라고 입력 검증기가 자동으로 타입을 보충한다고 가정하지 않는다.
+
+가상 데이터 전체는 `tests/fixtures/ontology/guide_examples.ttl`에 있다. 실제 기업 관계·보유종목 사실을 주장하지 않는다. 다음 질의도 회귀 테스트에 포함한다.
+
+```sparql
+PREFIX fp: <https://miraeasset.example/ontology/>
+# 미국에 상장된 주식형 해외 ETF. 투자 지역이 중국이어도 조건을 만족할 수 있다.
+SELECT ?etf WHERE {
+  ?etf a fp:ForeignETF ; fp:hasAssetType fp:asset_equity ; fp:isListedOn ?market .
+  ?market fp:marketCountryCode "US" .
+}
+```
+
+```sparql
+PREFIX fp: <https://miraeasset.example/ontology/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+# 예시 기준일 2026-07-11의 최근 6개월. 실제 조회는 확정된 기준일로 기간을 계산한다.
+SELECT DISTINCT ?product WHERE {
+  ?event a fp:ThemeAssociation ; fp:concernsProduct ?product ;
+    fp:associationTheme fp:theme_space_aerospace ; fp:linkedOn ?date ; fp:supportedBy ?source .
+  FILTER(?date >= "2026-01-11"^^xsd:date && ?date <= "2026-07-11"^^xsd:date)
+}
+```
+
+관측 레코드에서 현재 investsInTheme/isListedOn 관계를 자동 추론하지 않는다. 이력의 증거와 현재 상태를 혼동하지 않도록 질의에서 명시적으로 선택한다. 레코드 추가는 실제 이력 데이터 확보나 서버 API 구현 완료를 뜻하지 않는다.
 
 ## 통합 전 남은 범위 — 초안 유지 이유
 

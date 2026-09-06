@@ -67,7 +67,9 @@ fp:hasSubsidiary a owl:ObjectProperty ; rdfs:domain fp:Organization ; rdfs:range
 fp:affiliateOf a owl:ObjectProperty, owl:SymmetricProperty ;
     rdfs:domain fp:Organization ; rdfs:range fp:Organization .
 
+fp:riskGrade a owl:DatatypeProperty ; rdfs:domain fp:FinancialProduct ; rdfs:range xsd:integer .
 fp:FinancialProductShape a sh:NodeShape ; sh:targetClass fp:FinancialProduct ;
+    sh:property [ sh:path fp:riskGrade ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 1 ; sh:maxInclusive 6 ] ;
     sh:not [ sh:class fp:Organization ] ;
     sh:property [ sh:path fp:asOfDate ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
     sh:property [ sh:path fp:currency ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^[A-Z]{3}$" ] ;
@@ -91,6 +93,57 @@ fp:ETFShape a sh:NodeShape ; sh:targetClass fp:ETF ;
     sh:property [ sh:path fp:volatility ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ] ;
     sh:property [ sh:path fp:leverageFactor ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path fp:strategyText ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+
+# Asset class describes the investment exposure, not the listing jurisdiction.
+fp:AssetType a owl:Class ; rdfs:subClassOf skos:Concept .
+fp:hasAssetType a owl:ObjectProperty ; rdfs:domain fp:FinancialProduct ; rdfs:range fp:AssetType .
+fp:asset_equity a fp:AssetType ; skos:prefLabel "주식형"@ko .
+fp:asset_fixed_income a fp:AssetType ; skos:prefLabel "채권형"@ko .
+fp:asset_money_market a fp:AssetType ; skos:prefLabel "단기금융"@ko .
+fp:asset_mixed a fp:AssetType ; skos:prefLabel "혼합형"@ko .
+fp:FinancialProductClassificationShape a sh:NodeShape ; sh:targetClass fp:FinancialProduct ;
+    sh:property [ sh:path fp:hasAssetType ; sh:nodeKind sh:IRI ; sh:class fp:AssetType ] .
+
+# Document identity points to the original evidence; location may be a page, row or URL.
+fp:sourceIdentifier a owl:DatatypeProperty ; rdfs:domain fp:Document ; rdfs:range xsd:string .
+fp:sourceLocation a owl:DatatypeProperty ; rdfs:domain fp:Document ; rdfs:range xsd:string .
+fp:documentDate a owl:DatatypeProperty ; rdfs:domain fp:Document ; rdfs:range xsd:date .
+fp:riskFactorText a owl:DatatypeProperty ; rdfs:domain fp:Document ; rdfs:range xsd:string .
+fp:DocumentShape a sh:NodeShape ; sh:targetClass fp:Document ;
+    sh:property [ sh:path fp:sourceIdentifier ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path fp:sourceLocation ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path fp:documentDate ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path fp:riskFactorText ; sh:datatype xsd:string ; sh:minLength 1 ] .
+fp:EvidenceLinkShape a sh:NodeShape ; sh:targetSubjectsOf fp:describedBy ;
+    sh:property [ sh:path fp:describedBy ; sh:nodeKind sh:IRI ; sh:class fp:Document ] .
+
+# A dated assertion is separate from the product snapshot. No property-chain inference.
+fp:ThemeAssociation a owl:Class ; rdfs:subClassOf fp:Event .
+fp:associationTheme a owl:ObjectProperty ; rdfs:domain fp:ThemeAssociation ; rdfs:range fp:Theme .
+fp:linkedOn a owl:DatatypeProperty ; rdfs:domain fp:ThemeAssociation ; rdfs:range xsd:date .
+fp:supportedBy a owl:ObjectProperty ; rdfs:range fp:Document .
+fp:ThemeAssociationShape a sh:NodeShape ; sh:targetClass fp:ThemeAssociation ;
+    sh:property [ sh:path fp:concernsProduct ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class fp:FinancialProduct ] ;
+    sh:property [ sh:path fp:associationTheme ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class fp:Theme ] ;
+    sh:property [ sh:path fp:linkedOn ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path fp:supportedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ; sh:class fp:Document ] .
+
+# Listing is a dated observation; it does not assert the investment region.
+fp:ListingMarket a owl:Class ; rdfs:label "상장 시장"@ko .
+fp:marketCountryCode a owl:DatatypeProperty ; rdfs:domain fp:ListingMarket ; rdfs:range xsd:string .
+fp:isListedOn a owl:ObjectProperty ; rdfs:domain fp:FinancialProduct ; rdfs:range fp:ListingMarket .
+fp:ListingObservation a owl:Class .
+fp:listedProduct a owl:ObjectProperty ; rdfs:domain fp:ListingObservation ; rdfs:range fp:FinancialProduct .
+fp:listingMarket a owl:ObjectProperty ; rdfs:domain fp:ListingObservation ; rdfs:range fp:ListingMarket .
+fp:ListingMarketShape a sh:NodeShape ; sh:targetClass fp:ListingMarket ;
+    sh:property [ sh:path fp:marketCountryCode ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^[A-Z]{2}$" ] .
+fp:ListingLinkShape a sh:NodeShape ; sh:targetSubjectsOf fp:isListedOn ;
+    sh:property [ sh:path fp:isListedOn ; sh:nodeKind sh:IRI ; sh:class fp:ListingMarket ] .
+fp:ListingObservationShape a sh:NodeShape ; sh:targetClass fp:ListingObservation ;
+    sh:property [ sh:path fp:listedProduct ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:or ( [ sh:class fp:Security ] [ sh:class fp:ETF ] ) ] ;
+    sh:property [ sh:path fp:listingMarket ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class fp:ListingMarket ] ;
+    sh:property [ sh:path fp:asOfDate ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path fp:supportedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ; sh:class fp:Document ] .
 
 # BEGIN GENERATED CONCEPTS: b_agent.ontology.DEFAULT_ONTOLOGY.render_concepts_ttl("fp")
 fp:themeScheme a skos:ConceptScheme .

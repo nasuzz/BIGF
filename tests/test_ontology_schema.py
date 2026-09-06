@@ -133,5 +133,64 @@ class OntologySchemaTests(unittest.TestCase):
         self.assertEqual(set(self.schema.objects(FP.holds, RDFS.range)), {FP.Security})
 
 
+    def test_shared_risk_grade_for_bond_and_etfs(self):
+        for cls, extra in (("Bond", ""), ("DomesticETF", '; fp:currency "KRW"'),
+                           ("ForeignETF", '; fp:currency "USD" ; fp:ticker "T"')):
+            for value, expected in (("2", True), ("7", False), ("2, 6", False), ('"높은위험(2등급)"', False)):
+                with self.subTest(cls=cls, value=value):
+                    self.check(f'ex:p a fp:{cls} ; fp:productId "P" ; fp:riskGrade {value} {extra} .', expected)
+        self.assertEqual(set(self.schema.objects(FP.riskGrade, RDFS.domain)), {FP.FinancialProduct})
+        graph = self.schema + self.check('ex:p a fp:Bond ; fp:productId "P" ; fp:riskGrade 2 .')
+        DeductiveClosure(OWLRL_Semantics).expand(graph)
+        self.assertNotIn((Namespace('https://example.test/').p, RDF.type, FP.PublicFund), graph)
+
+    def guide_data(self):
+        path = Path(__file__).parent / "fixtures/ontology/guide_examples.ttl"
+        data = Graph().parse(path, format="turtle")
+        conforms, _, report = validate_data(data, self.schema)
+        self.assertTrue(conforms, report)
+        return data
+
+    def test_guide_queries_listing_and_history(self):
+        data = self.guide_data()
+        prefix = "PREFIX fp: <https://miraeasset.example/ontology/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
+        rows = list(data.query(prefix + '''SELECT ?etf WHERE {
+            ?etf a fp:ForeignETF ; fp:hasAssetType fp:asset_equity ; fp:isListedOn ?market .
+            ?market fp:marketCountryCode "US" . }'''))
+        self.assertEqual([str(r[0]) for r in rows], ['https://example.test/etf'])
+        # A listing in the US must not silently change an investment region in China.
+        self.assertNotIn((Namespace('https://example.test/').etf, FP.hasInvestmentRegion, FP.region_US), data)
+        rows = list(data.query(prefix + '''SELECT ?event WHERE {
+            ?event a fp:ThemeAssociation ; fp:linkedOn ?date ; fp:associationTheme fp:theme_space_aerospace .
+            FILTER(?date >= "2026-01-11"^^xsd:date && ?date <= "2026-07-11"^^xsd:date)
+        }'''))
+        self.assertEqual([str(r[0]) for r in rows], ['https://example.test/recent'])
+        rows = list(data.query(prefix + '''SELECT ?etf WHERE {
+            ?parent fp:hasSubsidiary ?issuer . ?stock fp:isIssuedBy ?issuer .
+            ?listing a fp:ListingObservation ; fp:listedProduct ?stock ;
+                fp:asOfDate "2026-07-11"^^xsd:date .
+            ?etf fp:holds ?stock . }'''))
+        self.assertEqual([str(r[0]) for r in rows], ['https://example.test/etf'])
+
+    def test_new_records_require_dates_evidence_and_correct_targets(self):
+        ex = Namespace('https://example.test/')
+        original = self.guide_data()
+        for subject, prop in ((ex.recent, FP.linkedOn), (ex.recent, FP.supportedBy),
+                              (ex.recent, FP.concernsProduct), (ex.listing, FP.asOfDate),
+                              (ex.listing, FP.supportedBy), (ex.doc, FP.sourceIdentifier)):
+            with self.subTest(subject=subject, prop=prop):
+                data = original + Graph()
+                data.remove((subject, prop, None))
+                self.assertFalse(validate_data(data, self.schema)[0])
+        for subject, prop, value in ((ex.listing, FP.listedProduct, ex.issuer),
+                                     (ex.recent, FP.associationTheme, ex.issuer),
+                                     (ex.etf, FP.hasAssetType, ex.issuer),
+                                     (ex.etf, FP.describedBy, ex.issuer)):
+            with self.subTest(prop=prop):
+                data = original + Graph()
+                data.set((subject, prop, value))
+                self.assertFalse(validate_data(data, self.schema)[0])
+
+
 if __name__ == '__main__':
     unittest.main()
