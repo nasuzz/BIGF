@@ -20,7 +20,7 @@
 
 ## 기술 스택
 
-Python 3.11 · FastAPI · PostgreSQL 18 (pgvector, pg_trgm) · CLOVA Studio HCX-005 · Qwen3-Embedding-0.6B · Docker
+Python 3.11 · FastAPI · PostgreSQL 18 (pgvector, pg_trgm) · CLOVA Studio HCX-005 · Docker
 
 ## API
 
